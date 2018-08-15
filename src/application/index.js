@@ -6,6 +6,7 @@ const middleNameComponent = document.querySelector('[data-component="middle-name
 middleNameComponent.innerHTML = 'Отчество';
 const input = document.querySelector('[data-component="input"]');
 const topContainer = document.querySelector('[data-component="top-container"]');
+const inputPage = document.querySelector('[data-component="page"]');
 
 
 let jsonText = null;
@@ -30,6 +31,12 @@ const httpRequest = (data) => {
       if (json.isPanding) {
         return;
       }
+      console.log(inputPage)
+      if (inputPage.value !== json.currentPage && inputPage.value !== '') {
+        topContainer.classList.add('uncurrent-page');
+      } else {
+        topContainer.classList.remove('uncurrent-page');
+      }
 
       if (json.notSend) {
         topContainer.classList.add('red');
@@ -46,6 +53,7 @@ const httpRequest = (data) => {
       const content = jsonText[arr[index]];
       text.innerHTML = content;
       index += 1;
+      text.classList.remove('sended');
     })
     .catch((e) => {
       console.log(e);
@@ -68,16 +76,24 @@ const pos = document.querySelector('[data-component="pos"]');
 pos.addEventListener('click', sendPos);
 
 
-text.addEventListener('click', () => {
+const copyToBuffer = () => {
   let r = document.createRange();
   r.selectNode(text);
   document.getSelection().addRange(r);
   document.execCommand('copy');
 
   if (index === 3) {
+    text.classList.add('sended');
     index = 0;
   }
   const content = jsonText[arr[index]];
   text.innerHTML = content;
   index += 1;
+};
+
+text.addEventListener('click', copyToBuffer);
+
+
+window.addEventListener('click', () => {
+  console.log('click');
 });

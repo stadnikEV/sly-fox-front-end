@@ -64,6 +64,23 @@ class Bitrix {
   getData({ currentRawIndex }) {
     this.currentRawElem = this.tbodyElem.children[currentRawIndex];
     this.currentRawElem.classList.add('main-grid-row-checked');
+
+    function scrollToElement(pos) {
+      window.scrollTo({
+          top: pos,
+          behavior: "smooth"
+      });
+    };
+    function getCoords(elem) {
+    var box = elem.getBoundingClientRect();
+      return {
+        top: box.top + pageYOffset,
+        left: box.left + pageXOffset
+      };
+    };
+    const coord = getCoords(this.currentRawElem);
+    scrollToElement(coord.top - this.currentRawElem.clientHeight);
+
     let email = this.getEmail();
     if (email === null) {
       email = 'undefined';
@@ -75,10 +92,12 @@ class Bitrix {
       console.warn('name не найден');
     }
     const notSend = this.isNotSend();
+    const currentPage = document.querySelector('.modern-page-current').textContent;
     return {
       name,
       email,
       notSend,
+      currentPage,
       index: currentRawIndex,
       length: this.tbodyElem.children.length,
     };
@@ -88,12 +107,32 @@ class Bitrix {
     const positionName = this.getThPosition({ thName: 'COMMENTS' });
     const tdElem = this.currentRawElem.childNodes[positionName];
     const span = tdElem.querySelector('span');
+    // по цвету
     const div = span.querySelector('div');
     if (div.firstElementChild) {
       if (div.firstElementChild.tagName === 'FONT') {
         return true;
       }
     }
+
+
+    const recursion = function a(elem) {
+      if (elem.children.length !== 0) {
+        return a(elem.children[0]);
+      }
+      const text = elem.textContent.toLowerCase();
+      if (text.search(/не дошло/) !== -1 || text.search(/не отправлено/) !== -1) {
+        return true;
+      }
+      return false;
+    };
+    const lengthOfChildren = span.children.length;
+    for (let i = 0; i < lengthOfChildren; i += 1) {
+      if (recursion(span.children[i])) {
+        return true;
+      }
+    }
+
     return false;
   }
 
