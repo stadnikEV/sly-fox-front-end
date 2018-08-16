@@ -13,16 +13,31 @@
     <span class="position" data-component="position"></span>
     <span class="first-name" data-component="first-name"></span>
     <span class="middle-name" data-component="middle-name"></span>
-    <input type="text" class="page" data-component="page">
   </div>
 
 
 
-  <div>
-    <button class="prev" data-component="prev">prev</button>
-    <button class="next" data-component="next">next</button>
-    <input type="text" class="input" data-component="input">
-    <button class="pos" data-component="pos">position</button>
+  <div class="options-container">
+    <div class="prev-next-container">
+      <button class="prev" data-component="prev">prev</button>
+      <button class="next" data-component="next">next</button>
+
+      <form action="#" class="form-pos">
+        <input type="text" class="input" data-component="input">
+        <button class="pos" data-component="pos">position</button>
+        <span class="go-to-describe">GO TO POSITION</span>
+      </form>
+
+    </div>
+
+    <div class="container-input-page">
+      <input type="text" class="page" data-component="page">
+      <span class="page-describe">PAGE</span>
+    </div>
+    <div class="pdf-container">
+      <input type="checkbox" class="checkbox">
+      <span class="pdf">NOT CREATE PDF</span>
+    </div>
   </div>
   <div type="text" class="text" data-component="text"></div>
 

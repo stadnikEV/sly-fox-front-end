@@ -12,7 +12,6 @@ class Bitrix {
         const data = {
           empty: true,
         };
-        console.log('empty True');
         this.htmlRequest(data);
       });
   }
@@ -62,7 +61,11 @@ class Bitrix {
 
 
   getData({ currentRawIndex }) {
+    if (this.lastCurrentRawElem) {
+      this.lastCurrentRawElem.classList.remove('main-grid-row-checked');
+    }
     this.currentRawElem = this.tbodyElem.children[currentRawIndex];
+    this.lastCurrentRawElem = this.currentRawElem;
     this.currentRawElem.classList.add('main-grid-row-checked');
 
     function scrollToElement(pos) {
@@ -78,8 +81,9 @@ class Bitrix {
         left: box.left + pageXOffset
       };
     };
+    this.headElem = this.tableElem.querySelector('thead.main-grid-header');
     const coord = getCoords(this.currentRawElem);
-    scrollToElement(coord.top - this.currentRawElem.clientHeight);
+    scrollToElement(coord.top - this.headElem.clientHeight);
 
     let email = this.getEmail();
     if (email === null) {
@@ -218,6 +222,7 @@ class Bitrix {
         return response.json();
       })
       .then((json) => {
+        console.log(json);
         if (json.move === 'next') {
           if (this.currentRawIndex + 1 < this.tbodyElem.children.length) {
             this.currentRawIndex += 1;
@@ -235,16 +240,14 @@ class Bitrix {
           this.htmlRequest(dataBitrix);
         }
         if (json.pos) {
-          let pos = parseInt(json.pos) - 1;
+          const pos = parseInt(json.pos) - 1;
           this.currentRawIndex = pos;
-          console.log(pos);
-          if (pos < 0) {
+          if (this.currentRawIndex < 0) {
             this.currentRawIndex = 0;
           }
-          if (pos > this.tbodyElem.children.length - 1) {
-            pos = this.tbodyElem.children.length - 1;
+          if (this.currentRawIndex > this.tbodyElem.children.length - 1) {
+            this.currentRawIndex = this.tbodyElem.children.length - 1;
           }
-          console.log(this.currentRawIndex);
           const dataBitrix = this.getData({ currentRawIndex: this.currentRawIndex });
           console.log(dataBitrix);
           this.htmlRequest(dataBitrix);

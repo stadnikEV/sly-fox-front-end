@@ -1,88 +1,190 @@
 html,body{
 overflow-y:hidden;
+font-size: 25px;
+font-family: sans-serif;
 }
 
-
+.top-container {
+  padding: 15px 0;
+}
 .top-container.red {
   background-color: red;
 }
 
+.prev-next-container {
+
+}
+
+.options-container {
+  background-color: rgb(234, 234, 234);
+  padding-bottom: 15px;
+}
+
+
 .position {
-  font-size: 25px;
+  float: right;
+  font-size: 40px;
   color: blue;
-  margin-left: 30px;
-  margin-top: 30px;
+  margin-right: 25px;
+  /* margin-left: 30px; */
+  /* margin-top: 15px; */
+}
+
+.form-pos {
+  float: right;
+  margin-right: 25px;
+}
+
+.go-to-describe {
+  float: right;
+  font-size: 20px;
+  line-height: 50px;
+  margin-right: 45px;
+  color: blue;
+  margin-top: 15px;
 }
 
 .first-name {
-  font-size: 25px;
-  margin-left: 70px;
-  margin-top: 30px;
+  font-size: 40px;
+  margin-left: 10px;
+  margin-top: 15px;
+  font-weight: bold;
 }
 .middle-name {
-  font-size: 25px;
+  font-weight: bold;
+  font-size: 40px;
   margin-left: 10px;
-  margin-top: 30px;
+  margin-top: 15px;
 }
 
-.prev {
+.prev, .next {
   font-size: 20px;
-  color: white;
+  color: rgb(247, 247, 247);
   margin-left: 25px;
-  margin-top: 30px;
+  margin-top: 15px;
   height: 50px;
   width: 100px;
   background-color: #4646C6;
+  outline: none;
 }
 
-.next {
-  font-size: 20px;
+
+
+.next:hover, .prev:hover {
+  cursor: pointer;
   color: white;
-  margin-left: 20px;
-  margin-top: 30px;
-  height: 50px;
-  width: 100px;
-  background-color: #4646C6;
+  background-color: rgb(23, 33, 198);
 }
 
 .sended {
-  background-color: green;
+  background-color: rgb(34, 180, 115);
 }
 
 .pos {
-  float: right;
   font-size: 20px;
-  color: white;
+  color: rgb(247, 247, 247);
   margin-left: 20px;
-  margin-top: 30px;
+  margin-top: 15px;
   height: 50px;
   width: 100px;
   background-color: #4646C6;
+  outline: none;
+  display: none;
+}
+
+.pos:hover {
+  cursor: pointer;
+  color: white;
+  background-color: rgb(23, 33, 198);
 }
 
 .input {
-  margin-right: 25px;
+  float: right;
+  margin-top: 15px;
+  height: 50px;
+  width: 100px;
+  box-sizing: border-box;
+  font-size: 30px;
+  letter-spacing: 6px;
+  color: blue;
+  padding-left: 25px;
+}
+
+.page-describe, .pdf {
   float: right;
   font-size: 20px;
-  margin-left: 20px;
-  margin-top: 30px;
-  height: 35px;
-  width: 100px;
+  line-height: 50px;
+  margin-right: 45px;
+  color: blue;
+}
+
+
+.pdf {
+  margin-right: 85px;
+}
+
+.container-input-page, .pdf-container {
+  margin-top: 15px;
+}
+
+.container-input-page.active, .pdf-container.active {
+  background-color: yellow;
+}
+
+
+
+.container-input-page::after, .pdf-container::after {
+  content: '.';
+  display: block;
+  height: 0;
+  clear: both;
+  visibility: hidden;
+}
+
+
+.container-input-page::after {
+  content: '.';
+  display: block;
+  height: 0;
+  clear: both;
+  visibility: hidden;
 }
 
 .page {
+  /* margin-top: 15px; */
+  margin-right: 25px;
   float: right;
-  width: 50px;
+  height: 50px;
+  width: 100px;
+  box-sizing: border-box;
+  font-size: 30px;
+  letter-spacing: 1px;
+  color: blue;
+  padding-left: 10px;
 }
+
 
 .uncurrent-page {
   background-color: yellow;
 }
 
+.checkbox {
+  float: right;
+  margin-top: 19px;
+  margin-right: 70px;
+}
+.checkbox:hover {
+  cursor: pointer;
+}
+
 .text {
   overflow: auto;
   width: 100%;
-  margin-top: 50px;
-  border-top: solid 1px black;
+  margin-top: 10px;
+  /* border-top: solid 1px blue; */
   height: 500px;
+}
+
+.text:hover {
+  cursor: pointer;
 }
