@@ -85,6 +85,8 @@ class Bitrix {
     const coord = getCoords(this.currentRawElem);
     scrollToElement(coord.top - this.headElem.clientHeight);
 
+    let notSend = this.isNotSend();
+
     let email = this.getEmail();
     if (email === null) {
       email = 'undefined';
@@ -92,10 +94,11 @@ class Bitrix {
     }
     let name = this.getName();
     if (name === null) {
-      name = 'undefined';
+      name = ['','',''];
+      notSend = true;
       console.warn('name не найден');
     }
-    const notSend = this.isNotSend();
+
     const currentPage = document.querySelector('.modern-page-current').textContent;
     return {
       name,
@@ -111,33 +114,17 @@ class Bitrix {
     const positionName = this.getThPosition({ thName: 'COMMENTS' });
     const tdElem = this.currentRawElem.childNodes[positionName];
     const span = tdElem.querySelector('span');
-    // по цвету
-    const div = span.querySelector('div');
-    if (div.firstElementChild) {
-      if (div.firstElementChild.tagName === 'FONT') {
-        return true;
-      }
+
+    if (span.querySelector('font')) {
+      return true;
     }
+    const dataText = span.textContent;
+    const matchArr = dataText.match(/(не дошло|НЕ ДОШЛО|не отправлено|НЕ ОТПРАВЛЕНО|нет таких|НЕТ ТАКИХ)/);
 
-
-    const recursion = function a(elem) {
-      if (elem.children.length !== 0) {
-        return a(elem.children[0]);
-      }
-      const text = elem.textContent.toLowerCase();
-      if (text.search(/не дошло/) !== -1 || text.search(/не отправлено/) !== -1) {
-        return true;
-      }
+    if (!matchArr) {
       return false;
-    };
-    const lengthOfChildren = span.children.length;
-    for (let i = 0; i < lengthOfChildren; i += 1) {
-      if (recursion(span.children[i])) {
-        return true;
-      }
     }
-
-    return false;
+    return true;
   }
 
 
@@ -191,12 +178,16 @@ class Bitrix {
       }
 
       const tdElem = this.currentRawElem.childNodes[positionName];
-      const dataText = tdElem.querySelector('div').textContent;
-      if (typeof dataText !== 'string') {
-        console.warn('не удалось получить строку name');
-        return null;
+
+
+      const dataText = tdElem.querySelector('span').textContent;
+      const matchArr = dataText.match(/[А-Я][а-яёЁ]*\s[А-Я][а-яёЁ]*\s[А-Я][а-яёЁ]*/);
+
+      if (!matchArr) {
+       return null;
       }
-      const nameString = dataText.match(/.*/)[0];
+
+      const nameString = matchArr[0];
       const name = nameString.split(' ');
       if (name.length !== 3) {
         console.warn('В найденном объекте ФИО не три элемента');
@@ -265,6 +256,3 @@ class Bitrix {
       });
   }
 }
-
-
-new Bitrix();
