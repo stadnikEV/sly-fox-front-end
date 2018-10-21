@@ -141,6 +141,22 @@ font-family: sans-serif;
   visibility: hidden;
 }
 
+.add-comment-container {
+  height: 50px;
+}
+.checkbox-add-comment {
+  float: right;
+  margin-top: 15px;
+  margin-right: 70px;
+}
+.add-comment-describe {
+  float: right;
+  font-size: 20px;
+  line-height: 50px;
+  margin-right: 45px;
+  color: blue;
+}
+
 
 .container-input-page::after {
   content: '.';
@@ -181,10 +197,37 @@ font-family: sans-serif;
   overflow: auto;
   width: 100%;
   margin-top: 10px;
-  /* border-top: solid 1px blue; */
   height: 500px;
 }
 
 .text:hover {
   cursor: pointer;
+}
+
+.sended-count {
+  float: left;
+  color: blue;
+  background-color: rgb(234, 234, 234);
+  line-height: 50px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 40px;
+}
+
+.arrow-count-left, .arrow-count-right {
+  float: left;
+  line-height: 50px;
+  margin-left: 20px;
+  margin-right: 20px;
+  color: gray;
+  cursor: pointer;
+  user-select: none;
+}
+
+.arrow-count-left {
+  margin-left: 20px
+}
+
+.arrow-count-left.hidden, .arrow-count-right.hidden {
+  visibility: hidden;
 }

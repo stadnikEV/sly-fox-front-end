@@ -4,6 +4,7 @@ class Bitrix {
 
     this.timer = this.isLoadDom()
       .then(() => {
+        console.log('load DOM');
         this.numbersOfRaws = this.getNumbersOfRaws();
         if (this.numbersOfRaws === 0) {
           console.warn('Строки с пользователями отсутствуют');
@@ -12,7 +13,7 @@ class Bitrix {
         const data = {
           empty: true,
         };
-        this.htmlRequest(data);
+        this.httpRequest(data);
       });
   }
 
@@ -70,17 +71,18 @@ class Bitrix {
 
     function scrollToElement(pos) {
       window.scrollTo({
-          top: pos,
-          behavior: "smooth"
+        top: pos,
+        behavior: 'smooth',
       });
-    };
+    }
+
     function getCoords(elem) {
-    var box = elem.getBoundingClientRect();
+      const box = elem.getBoundingClientRect();
       return {
-        top: box.top + pageYOffset,
-        left: box.left + pageXOffset
+        top: box.top + window.pageYOffset,
+        left: box.left + window.pageXOffset,
       };
-    };
+    }
     this.headElem = this.tableElem.querySelector('thead.main-grid-header');
     const coord = getCoords(this.currentRawElem);
     scrollToElement(coord.top - this.headElem.clientHeight);
@@ -94,13 +96,18 @@ class Bitrix {
     }
     let name = this.getName();
     if (name === null) {
-      name = ['','',''];
+      name = ['', '', ''];
       notSend = true;
       console.warn('name не найден');
     }
 
+    const comment = this.getComment();
+    const id = this.getId();
+
     const currentPage = document.querySelector('.modern-page-current').textContent;
     return {
+      id,
+      comment,
       name,
       email,
       notSend,
@@ -108,6 +115,23 @@ class Bitrix {
       index: currentRawIndex,
       length: this.tbodyElem.children.length,
     };
+  }
+
+  getComment() {
+    const positionName = this.getThPosition({ thName: 'COMMENTS' });
+    if (!positionName) {
+      console.warn('Не найдена позиция КОММЕНТАРИЙ в header');
+      return null;
+    }
+    const tdElem = this.currentRawElem.childNodes[positionName];
+    return tdElem.querySelector('span').textContent;
+  }
+
+  getId() {
+    const positionName = this.getThPosition({ thName: 'ID' });
+    const tdElem = this.currentRawElem.childNodes[positionName];
+    const idElem = tdElem.querySelector('span');
+    return idElem.textContent;
   }
 
   isNotSend() {
@@ -184,7 +208,7 @@ class Bitrix {
       const matchArr = dataText.match(/[А-Я][а-яёЁ]*\s[А-Я][а-яёЁ]*\s[А-Я][а-яёЁ]*/);
 
       if (!matchArr) {
-       return null;
+        return null;
       }
 
       const nameString = matchArr[0];
@@ -200,8 +224,8 @@ class Bitrix {
     }
   }
 
-  htmlRequest(data) {
-    fetch('http://localhost:8080/bitrix', {
+  httpRequest(data) {
+    fetch('http://localhost:3000/bitrix', {
       method: 'post',
       headers: {
         'Content-Type': 'application/json',
@@ -209,6 +233,7 @@ class Bitrix {
       body: JSON.stringify(data),
     })
       .then((response) => {
+        console.log('ответ с сервера');
         this.response = response;
         return response.json();
       })
@@ -220,7 +245,7 @@ class Bitrix {
           }
           const dataBitrix = this.getData({ currentRawIndex: this.currentRawIndex });
           console.log(dataBitrix);
-          this.htmlRequest(dataBitrix);
+          this.httpRequest(dataBitrix);
         }
         if (json.move === 'prev') {
           if (this.currentRawIndex > 0) {
@@ -228,10 +253,10 @@ class Bitrix {
           }
           const dataBitrix = this.getData({ currentRawIndex: this.currentRawIndex });
           console.log(dataBitrix);
-          this.htmlRequest(dataBitrix);
+          this.httpRequest(dataBitrix);
         }
         if (json.pos) {
-          const pos = parseInt(json.pos) - 1;
+          const pos = parseInt(json.pos, 10) - 1;
           this.currentRawIndex = pos;
           if (this.currentRawIndex < 0) {
             this.currentRawIndex = 0;
@@ -240,8 +265,7 @@ class Bitrix {
             this.currentRawIndex = this.tbodyElem.children.length - 1;
           }
           const dataBitrix = this.getData({ currentRawIndex: this.currentRawIndex });
-          console.log(dataBitrix);
-          this.htmlRequest(dataBitrix);
+          this.httpRequest(dataBitrix);
         }
       })
       .catch((e) => {
@@ -249,10 +273,12 @@ class Bitrix {
           const newData = {
             empty: true,
           };
-          this.htmlRequest(newData);
+          this.httpRequest(newData);
         }, 400);
         console.warn(e);
         console.warn('Ошибка обработки данных с сервера');
       });
   }
 }
+
+new Bitrix();
