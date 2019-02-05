@@ -44,25 +44,24 @@ const getDateFormat = (value) => {
   if (value > 9) {
     return value;
   }
-  return `0 + ${value}`;
+  return `0${value}`;
 };
 
+
 const sendComment = () => {
-  console.log(checkboxAddComment.checked);
   if (!checkboxAddComment.checked) {
     return;
   }
-  let newComment = comment.replace(/\n/g, '<br>');
-  newComment += `<br>${getDateFormat(date.getDate())}\/${getDateFormat(date.getMonth() + 1)}\/${date.getFullYear()} Юля. Икона Троица.`;
-  console.log(newComment);
   const data = {
-    id,
-    fields:
-    {
-      COMMENTS: newComment,
-    },
+    order: { DATE_CREATE: 'ASC' },
+    filter: { ID: id },
+    select: ['COMMENTS', 'ID'],
   };
-  fetch('https://b24-2sa9b2.bitrix24.ru/rest/1/mqst2a2pn25obw29/crm.company.update', {
+
+  // let newComment = comment.replace(/\n/g, '<br>');
+  // newComment += `<br>${getDateFormat(date.getDate())}\/${getDateFormat(date.getMonth() + 1)}\/${date.getFullYear()} Юля. Икона Троица.`;
+  // console.log(newComment);
+  fetch('https://b24-2sa9b2.bitrix24.ru/rest/1/mqst2a2pn25obw29/crm.company.list', {
     method: 'post',
     headers: {
       'Content-Type': 'application/json',
@@ -76,6 +75,27 @@ const sendComment = () => {
     .catch((e) => {
       console.log(e);
     });
+  // const data = {
+  //   id,
+  //   fields:
+  //   {
+  //     COMMENTS: newComment,
+  //   },
+  // };
+  // fetch('https://b24-2sa9b2.bitrix24.ru/rest/1/mqst2a2pn25obw29/crm.company.update', {
+  //   method: 'post',
+  //   headers: {
+  //     'Content-Type': 'application/json',
+  //   },
+  //   body: JSON.stringify(data),
+  // })
+  //   .then(response => response.json())
+  //   .then((json) => {
+  //     console.log(json);
+  //   })
+  //   .catch((e) => {
+  //     console.log(e);
+  //   });
 };
 
 const httpRequest = (data) => {
@@ -255,4 +275,162 @@ arrowCountRight.addEventListener('click', () => {
   isCountChange = false;
   arrowCountLeft.classList.add('hidden');
   arrowCountRight.classList.add('hidden');
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Приложение авто-комментарий
+
+let autoCommentActive = false;
+let commentStartActive = false;
+let currentId = null;
+let endId = null;
+let hook = 'https://b24-2iruy0.bitrix24.ua/rest/1/nyvcvifbbajtkvh3';
+let template = null;
+
+
+const autoCommentCheckBoxElem = document.querySelector('.auto-comment-checkbox');
+const autoCommentElem = document.querySelector('.auto-comment');
+const commentButtonStart = document.querySelector('.auto-comment__start');
+const commentButtonStop = document.querySelector('.auto-comment__stop');
+const startIdInput = document.querySelector('.auto-comment__from');
+const stopIdInput = document.querySelector('.auto-comment__to');
+const hookInput = document.querySelector('.auto-comment__hook');
+const templateInput = document.querySelector('.auto-comment__template');
+const statusElem = document.querySelector('.auto-comment__status');
+
+
+const getListId = () => {
+  const promise = new Promise((resolve, reject) => {
+    statusElem.innerHTML = 'получения листа';
+    let start = currentId - 1;
+    const result = [];
+
+    const get = () => {
+      fetch(`${hook}/crm.company.list?filter[>ID]=${start}`, {
+        method: 'post',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+        .then((response) => {
+          return response.json();
+        })
+        .then((json) => {
+          if (json.result.length === 0) {
+            resolve(result);
+            return;
+          }
+
+          json.result.forEach((item) => {
+            if (item.ID <= endId) {
+              result.push({
+                ID: item.ID,
+                COMMENTS: item.COMMENTS,
+              });
+            }
+          });
+
+          const end = parseInt(result[result.length - 1].ID);
+
+          if (end < endId) {
+            start = end + 1;
+
+            setTimeout(() => {
+              get();
+            }, 1000);
+            return;
+          }
+          statusElem.innerHTML = '';
+          resolve(result);
+        })
+        .catch((e) => {
+          statusElem.innerHTML = 'ошбка получения листа';
+          reject(e);
+        });
+    };
+
+    get();
+  });
+
+  return promise;
+};
+
+
+const autoAddComment = () => {
+  if (!autoCommentActive || !commentStartActive) {
+    statusElem.innerHTML = 'добавление невозможно. модуль в режиме стоп';
+    return;
+  }
+
+  getListId()
+    .then((list) => {
+      console.log(list);
+    })
+    .catch((e) => {
+      commentStartActive = false;
+      console.log(e);
+    });
+};
+
+
+
+autoCommentCheckBoxElem.addEventListener('click', () => {
+  if (autoCommentCheckBoxElem.checked) {
+    autoCommentActive = true;
+    autoCommentElem.classList.remove('hidden');
+    return;
+  }
+  autoCommentActive = false;
+  autoCommentElem.classList.add('hidden');
+});
+
+
+
+commentButtonStart.addEventListener('click', () => {
+  statusElem.innerHTML = '';
+  if (commentStartActive) {
+    return;
+  }
+
+  const startId = parseInt(startIdInput.value);
+  endId = parseInt(stopIdInput.value);
+  // hook = hookInput.value;
+  template = templateInput.value;
+
+  if (!startId || !endId || !hook || template) {
+    statusElem.innerHTML = 'заполните все поля';
+    return;
+  }
+
+
+  currentId = startId;
+  commentStartActive = true;
+
+  autoAddComment();
+});
+
+
+
+commentButtonStop.addEventListener('click', () => {
+  endId = null;
+  hook = null;
+  template = null;
+  hook = null;
+  statusElem.innerHTML = '';
+  commentStartActive = false;
 });

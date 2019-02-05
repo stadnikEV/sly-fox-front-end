@@ -1,5 +1,5 @@
 html,body{
-overflow-y:hidden;
+/* overflow-y:hidden; */
 font-size: 25px;
 font-family: sans-serif;
 }
@@ -212,6 +212,7 @@ font-family: sans-serif;
   cursor: pointer;
   user-select: none;
   font-size: 40px;
+  margin-left: 20px;
 }
 
 .arrow-count-left, .arrow-count-right {
@@ -230,4 +231,56 @@ font-family: sans-serif;
 
 .arrow-count-left.hidden, .arrow-count-right.hidden {
   visibility: hidden;
+}
+
+
+
+/* auto comment app */
+
+.auto-comment {
+  background-color: lightgray;
+}
+
+.auto-comment__title,
+.auto-comment__id-title,
+.auto-comment__status,
+.auto-comment__template-title,
+.auto-comment__hook-title {
+  font-size: 16px;
+}
+
+.auto-comment__id-title {
+  margin-right: 20px;
+}
+.auto-comment__id {
+  margin-right: 20px;
+}
+
+.auto-comment__from,
+.auto-comment__to {
+  width: 60px;
+}
+
+.auto-comment__status {
+  color: blue;
+  margin-left: 30px;
+}
+
+
+.auto-comment {
+  padding-top: 20px;
+  padding-bottom: 50px;
+}
+
+.auto-comment__template {
+  width: 300px;
+}
+
+.auto-comment__hook {
+  width: 300px;
+  margin-left: 22px;
+}
+
+.hidden {
+  display: none;
 }

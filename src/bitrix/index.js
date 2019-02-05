@@ -124,7 +124,7 @@ class Bitrix {
       return null;
     }
     const tdElem = this.currentRawElem.childNodes[positionName];
-    return tdElem.querySelector('span').textContent;
+    return tdElem.querySelector('span').innerText;
   }
 
   getId() {
