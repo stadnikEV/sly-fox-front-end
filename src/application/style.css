@@ -245,7 +245,8 @@ font-family: sans-serif;
 .auto-comment__id-title,
 .auto-comment__status,
 .auto-comment__template-title,
-.auto-comment__hook-title {
+.auto-comment__hook-title,
+.auto-comment__id {
   font-size: 16px;
 }
 
@@ -268,6 +269,7 @@ font-family: sans-serif;
 
 
 .auto-comment {
+  padding-left: 20px;
   padding-top: 20px;
   padding-bottom: 50px;
 }

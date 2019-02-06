@@ -52,16 +52,16 @@ const sendComment = () => {
   if (!checkboxAddComment.checked) {
     return;
   }
-  const data = {
+  let data = {
     order: { DATE_CREATE: 'ASC' },
     filter: { ID: id },
     select: ['COMMENTS', 'ID'],
   };
 
-  // let newComment = comment.replace(/\n/g, '<br>');
-  // newComment += `<br>${getDateFormat(date.getDate())}\/${getDateFormat(date.getMonth() + 1)}\/${date.getFullYear()} Юля. Икона Троица.`;
-  // console.log(newComment);
-  fetch('https://b24-2sa9b2.bitrix24.ru/rest/1/mqst2a2pn25obw29/crm.company.list', {
+  let newComment = comment.replace(/\n/g, '<br>');
+  newComment += `<br>${getDateFormat(date.getDate())}\/${getDateFormat(date.getMonth() + 1)}\/${date.getFullYear()} Юля. Икона Троица.`;
+  console.log(newComment);
+  fetch('https://b24-2iruy0.bitrix24.ua/rest/1/nyvcvifbbajtkvh3/crm.company.list', {
     method: 'post',
     headers: {
       'Content-Type': 'application/json',
@@ -75,27 +75,27 @@ const sendComment = () => {
     .catch((e) => {
       console.log(e);
     });
-  // const data = {
-  //   id,
-  //   fields:
-  //   {
-  //     COMMENTS: newComment,
-  //   },
-  // };
-  // fetch('https://b24-2sa9b2.bitrix24.ru/rest/1/mqst2a2pn25obw29/crm.company.update', {
-  //   method: 'post',
-  //   headers: {
-  //     'Content-Type': 'application/json',
-  //   },
-  //   body: JSON.stringify(data),
-  // })
-  //   .then(response => response.json())
-  //   .then((json) => {
-  //     console.log(json);
-  //   })
-  //   .catch((e) => {
-  //     console.log(e);
-  //   });
+  data = {
+    id,
+    fields:
+    {
+      COMMENTS: newComment,
+    },
+  };
+  fetch('https://b24-2iruy0.bitrix24.ua/rest/1/nyvcvifbbajtkvh3/crm.company.update', {
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
+    .then(response => response.json())
+    .then((json) => {
+      console.log(json);
+    })
+    .catch((e) => {
+      console.log(e);
+    });
 };
 
 const httpRequest = (data) => {
@@ -299,8 +299,9 @@ let autoCommentActive = false;
 let commentStartActive = false;
 let currentId = null;
 let endId = null;
-let hook = 'https://b24-2iruy0.bitrix24.ua/rest/1/nyvcvifbbajtkvh3';
+// let hook = 'https://b24-2iruy0.bitrix24.ua/rest/1/nyvcvifbbajtkvh3';
 let template = null;
+let hook = null;
 
 
 const autoCommentCheckBoxElem = document.querySelector('.auto-comment-checkbox');
@@ -312,6 +313,8 @@ const stopIdInput = document.querySelector('.auto-comment__to');
 const hookInput = document.querySelector('.auto-comment__hook');
 const templateInput = document.querySelector('.auto-comment__template');
 const statusElem = document.querySelector('.auto-comment__status');
+const autoIdElem = document.querySelector('.auto-comment__id');
+
 
 
 const getListId = () => {
@@ -345,6 +348,10 @@ const getListId = () => {
             }
           });
 
+          if (result.length === 0) {
+            resolve(result);
+          }
+
           const end = parseInt(result[result.length - 1].ID);
 
           if (end < endId) {
@@ -370,6 +377,74 @@ const getListId = () => {
   return promise;
 };
 
+const onCommentStop = () => {
+  endId = null;
+  hook = null;
+  template = null;
+  hook = null;
+  statusElem.innerHTML = '';
+  commentStartActive = false;
+};
+
+const autoSendComment = (data) => {
+  const promise = new Promise((resolve, reject) => {
+    autoIdElem.innerHTML = data.id;
+    fetch(`${hook}/crm.company.update`, {
+      method: 'post',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+      .then(response => response.json())
+      .then(() => {
+        resolve();
+      })
+      .catch((e) => {
+        statusElem.innerHTML = 'Ошибка при добавлении в битрикс';
+        reject(e);
+      });
+  });
+
+  return promise;
+};
+
+
+const autoCommentAdd = (list) => {
+  const promise = new Promise((resolve, reject) => {
+    statusElem.innerHTML = 'Добавление в базу';
+    let added = 0;
+
+    if (list.length === 0) {
+      resolve();
+      return;
+    }
+    const add = () => {
+      const item = list.shift();
+      const COMMENTS = item.COMMENTS += `<br>${template}`;
+      const data = { id: item.ID, fields: { COMMENTS } };
+      autoSendComment(data)
+        .then(() => {
+          added += 1;
+          if (list.length === 0) {
+            resolve(added);
+            return;
+          }
+          setTimeout(() => {
+            add();
+          }, 800);
+        })
+        .catch((e) => {
+          reject(e);
+        });
+    };
+
+    add();
+  });
+
+  return promise;
+}
+
 
 const autoAddComment = () => {
   if (!autoCommentActive || !commentStartActive) {
@@ -379,7 +454,11 @@ const autoAddComment = () => {
 
   getListId()
     .then((list) => {
-      console.log(list);
+      return autoCommentAdd(list);
+    })
+    .then((added) => {
+      statusElem.innerHTML = `Успешно добавленно ${added}`;
+      commentStartActive = false;
     })
     .catch((e) => {
       commentStartActive = false;
@@ -409,10 +488,17 @@ commentButtonStart.addEventListener('click', () => {
 
   const startId = parseInt(startIdInput.value);
   endId = parseInt(stopIdInput.value);
-  // hook = hookInput.value;
+  hook = hookInput.value;
   template = templateInput.value;
 
-  if (!startId || !endId || !hook || template) {
+  if (endId % 2 !== 0 || startId % 2 !== 0) {
+    onCommentStop();
+    statusElem.innerHTML = 'id должны быть четные числа';
+    return;
+  }
+
+  if (!startId || !endId || !hook || !template) {
+    onCommentStop();
     statusElem.innerHTML = 'заполните все поля';
     return;
   }
@@ -426,11 +512,5 @@ commentButtonStart.addEventListener('click', () => {
 
 
 
-commentButtonStop.addEventListener('click', () => {
-  endId = null;
-  hook = null;
-  template = null;
-  hook = null;
-  statusElem.innerHTML = '';
-  commentStartActive = false;
-});
+
+commentButtonStop.addEventListener('click', onCommentStop);
