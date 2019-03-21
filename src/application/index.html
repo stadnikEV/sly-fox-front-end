@@ -42,18 +42,30 @@
       <span class="pdf">NOT CREATE PDF</span></br>
     </div>
     <div class="add-comment-container">
-      <input type="checkbox" class="checkbox-add-comment">
+      <input type="checkbox" class="checkbox-add-comment checkbox">
       <span class="add-comment-describe">ADD COMMENT</span>
     </div>
-
+    <div class="not-sended-container">
+      <button class="not-sended-button" data-component="not-sended-button">not sended</button>
+      <button class="send-not-sended-button" data-component="send-not-sended-button">send not sended</button>
+    </div>
   </div>
+
   <div type="text" class="text" data-component="text"></div>
 
+  <div class="all-email"></div>
+
+  <div class="not-sended-content hidden">
+    <button class="not-sended-content__remove hidden">Удалить</button>
+    <button class="not-sended-content__send hidden">Отправить</button></br>
+  </div>
 
 
   <div class="auto-comment-content">
-    <input type="checkbox" class="auto-comment-checkbox">
-    <span class="auto-comment__title">авто комментарий</span>
+    <div class="auto-comment__title-container">
+      <input type="checkbox" class="auto-comment__checkbox">
+      <span class="auto-comment__title">авто комментарий</span>
+    </div>
     <div class="auto-comment hidden">
       <span class="auto-comment__id-title">ID</span>
       <span class="auto-comment__id"></span></br>

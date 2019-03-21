@@ -14,6 +14,10 @@ const sendedElem = document.querySelector('.sended-count');
 const arrowCountLeft = document.querySelector('.arrow-count-left');
 const arrowCountRight = document.querySelector('.arrow-count-right');
 const checkboxAddComment = document.querySelector('.checkbox-add-comment');
+const addCommentDescribe = document.querySelector('.add-comment-describe');
+const allEmail = document.querySelector('.all-email');
+const notSendedRemoveButton = document.querySelector('.not-sended-content__remove');
+const notSendedSendButton = document.querySelector('.not-sended-content__send');
 
 
 const date = new Date();
@@ -28,7 +32,7 @@ let jsonText = null;
 let index = null;
 let jsonLength = null;
 let lastIndex = null;
-const arr = ['email', 'theme', 'body'];
+const arr = ['theme', 'email', 'body'];
 const text = document.querySelector('[data-component="text"]');
 
 let currentIndex = null;
@@ -47,126 +51,156 @@ const getDateFormat = (value) => {
   return `0${value}`;
 };
 
+const sliceEmail = ({ emailString }) => {
+  const email = emailString
+    .split(',')
+    .splice(0, 3);
 
-const sendComment = () => {
-  if (!checkboxAddComment.checked) {
-    return;
-  }
-  let data = {
-    order: { DATE_CREATE: 'ASC' },
-    filter: { ID: id },
-    select: ['COMMENTS', 'ID'],
-  };
+  return email.join(',');
+};
 
-  let newComment = comment.replace(/\n/g, '<br>');
-  newComment += `<br>${getDateFormat(date.getDate())}\/${getDateFormat(date.getMonth() + 1)}\/${date.getFullYear()} Юля. Икона Троица.`;
-  console.log(newComment);
-  fetch('https://b24-2iruy0.bitrix24.ua/rest/1/nyvcvifbbajtkvh3/crm.company.list', {
-    method: 'post',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  })
-    .then(response => response.json())
-    .then((json) => {
-      console.log(json);
+
+const sendComment = ({ comment }) => {
+  // let data = {
+  //   order: { DATE_CREATE: 'ASC' },
+  //   filter: { ID: id },
+  //   select: ['COMMENTS', 'ID'],
+  // };
+
+  // fetch('https://b24-2iruy0.bitrix24.ua/rest/1/nyvcvifbbajtkvh3/crm.company.list', {
+  //   method: 'post',
+  //   headers: {
+  //     'Content-Type': 'application/json',
+  //   },
+  //   body: JSON.stringify(data),
+  // })
+  //   .then(response => response.json())
+  //   .then((json) => {
+  //     console.log(json);
+  //   })
+  //   .catch((e) => {
+  //     console.log(e);
+  //   });
+
+  return new Promise((resolve, reject) => {
+    const data = {
+      id,
+      fields:
+      {
+        COMMENTS: comment,
+      },
+    };
+    fetch('https://b24-2iruy0.bitrix24.ua/rest/1/nyvcvifbbajtkvh3/crm.company.update', {
+      method: 'post',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
     })
-    .catch((e) => {
-      console.log(e);
-    });
-  data = {
-    id,
-    fields:
-    {
-      COMMENTS: newComment,
-    },
-  };
-  fetch('https://b24-2iruy0.bitrix24.ua/rest/1/nyvcvifbbajtkvh3/crm.company.update', {
-    method: 'post',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  })
-    .then(response => response.json())
-    .then((json) => {
-      console.log(json);
-    })
-    .catch((e) => {
-      console.log(e);
-    });
+      .then(response => response.json())
+      .then((json) => {
+        resolve();
+        console.log(json);
+      })
+      .catch((e) => {
+        reject();
+        console.log(e);
+      });
+  });
 };
 
 const httpRequest = (data) => {
-  data.notCreatePDF = checkbox.checked;
-  lastRequesrData = data;
-  console.log(data);
-  fetch('http://localhost:3000/application', {
-    method: 'post',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  })
-    .then((response) => {
-      const json = response.json();
-      return json;
+  const promise = new Promise((resolve) => {
+    data.notCreatePDF = checkbox.checked;
+    lastRequesrData = data;
+    console.log(data);
+    fetch('http://localhost:3000/application', {
+      method: 'post',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
     })
-    .then((json) => {
-      id = json.id;
-      comment = json.comment;
-      // console.log(lastCurrentPage, json.currentPage);
+      .then((response) => {
+        const json = response.json();
+        return json;
+      })
+      .then((json) => {
+        notSendedRemoveButton.classList.add('hidden');
+        notSendedSendButton.classList.add('hidden');
+        const buttonNotSendedPos = document.querySelector('.not-sended-content__button-pos.active');
 
-      if (json.isPanding || json.index === undefined) {
-        isPanding = true;
-        if (lastRequesrData) {
-          setTimeout(() => {
-            httpRequest(lastRequesrData);
-          }, 200);
+        if (buttonNotSendedPos) {
+          buttonNotSendedPos.classList.remove('active');
         }
-        return;
-      }
-      isPanding = false;
 
-      if (lastCurrentPage !== null && lastCurrentPage !== json.currentPage && json.currentPage !== undefined) {
+        console.log(json);
+        id = json.id;
+        comment = json.comment;
+        // console.log(lastCurrentPage, json.currentPage);
+
+        if (json.isPanding || json.index === undefined) {
+          isPanding = true;
+          if (lastRequesrData) {
+            setTimeout(() => {
+              httpRequest(lastRequesrData)
+                .then(() => {
+                  resolve();
+                });
+            }, 200);
+          }
+          return;
+        }
+        isPanding = false;
+
+        if (lastCurrentPage !== null && lastCurrentPage !== json.currentPage && json.currentPage !== undefined) {
+          lastCurrentPage = json.currentPage;
+          lastRequesrData = { pos: 1 };
+          httpRequest({ pos: 1 });
+          resolve();
+          return;
+        }
+        currentIndex = json.index + 1;
+        isSended = false;
+        backlightPage(json.currentPage);
+
+        if (json.notSend) {
+          topContainer.classList.add('red');
+          topContainer.classList.remove('green');
+        } else {
+          topContainer.classList.remove('red');
+          topContainer.classList.remove('green');
+        }
+
+        if (lastIndex === jsonLength && currentIndex !== jsonLength - 1 && jsonLength !== null && data.move === 'next') {
+          topContainer.classList.add('green');
+        }
+
+        jsonLength = json.length;
+        lastIndex = json.index + 1;
+        positionComponent.innerHTML = `${json.index + 1} / ${json.length}`;
+        firstNameComponent.innerHTML = json.firstName;
+        middleNameComponent.innerHTML = json.middleName;
+
+        jsonText = json.text;
+        index = 0;
+        const content = jsonText[arr[index]];
+        // const content = sliceEmail({ emailString: jsonText[arr[index]] });
+
+        text.innerHTML = content;
+        allEmail.innerHTML = jsonText[arr[1]];
+        index += 1;
+        text.classList.remove('sended');
         lastCurrentPage = json.currentPage;
-        lastRequesrData = { pos: 1 };
-        httpRequest({ pos: 1 });
-        return;
-      }
-      currentIndex = json.index + 1;
-      isSended = false;
-      backlightPage(json.currentPage);
 
-      if (json.notSend) {
-        topContainer.classList.add('red');
-      } else {
-        topContainer.classList.remove('red');
-      }
+        resolve();
+      })
+      .catch((e) => {
+        console.log(e);
+      });
+  });
 
-      if (lastIndex === jsonLength && currentIndex !== 99) {
-        topContainer.classList.add('red');
-      }
-
-      jsonLength = json.length;
-      lastIndex = json.index + 1;
-      positionComponent.innerHTML = `${json.index + 1} / ${json.length}`;
-      firstNameComponent.innerHTML = json.firstName;
-      middleNameComponent.innerHTML = json.middleName;
-
-      jsonText = json.text;
-      index = 0;
-      const content = jsonText[arr[index]];
-
-      text.innerHTML = content;
-      index += 1;
-      text.classList.remove('sended');
-      lastCurrentPage = json.currentPage;
-    })
-    .catch((e) => {
-      console.log(e);
-    });
+  return promise;
 };
 
 httpRequest({ pos: 1 });
@@ -226,7 +260,7 @@ const copyToBuffer = () => {
   document.getSelection().addRange(r);
   document.execCommand('copy');
 
-  if (index === 3) {
+  if (index === 2) {
     text.classList.add('sended');
     index = 0;
     if (isSended) {
@@ -234,10 +268,32 @@ const copyToBuffer = () => {
     }
     sendedCount += 1;
     sendedElem.textContent = sendedCount;
-    sendComment();
+
+    if (checkboxAddComment.checked) {
+      addCommentDescribe.classList.remove('red');
+      let newComment = comment.replace(/\n/g, '<br>');
+      newComment += `<br>${getDateFormat(date.getDate())}\/${getDateFormat(date.getMonth() + 1)}\/${date.getFullYear()} Юля. Икона Троица.`;
+      sendComment({ comment: newComment })
+        .then(() => {
+          addCommentDescribe.classList.add('green');
+          setTimeout(() => {
+            addCommentDescribe.classList.remove('green');
+          }, 1000);
+        })
+        .catch(() => {
+          addCommentDescribe.classList.add('red');
+        });
+    }
+
     isSended = true;
   }
-  const content = jsonText[arr[index]];
+  let contentText = jsonText[arr[index]];
+
+  if (index === 1) {
+    contentText = sliceEmail({ emailString: contentText });
+  }
+  const content = contentText;
+
 
   // if (index === 2) {
   //   content = content.replace(/\s/g, '.');
@@ -304,7 +360,7 @@ let template = null;
 let hook = null;
 
 
-const autoCommentCheckBoxElem = document.querySelector('.auto-comment-checkbox');
+const autoCommentCheckBoxElem = document.querySelector('.auto-comment__checkbox');
 const autoCommentElem = document.querySelector('.auto-comment');
 const commentButtonStart = document.querySelector('.auto-comment__start');
 const commentButtonStop = document.querySelector('.auto-comment__stop');
@@ -511,6 +567,123 @@ commentButtonStart.addEventListener('click', () => {
 });
 
 
-
-
 commentButtonStop.addEventListener('click', onCommentStop);
+
+
+// Приложение НЕ ОТПРАВЛЕНО
+
+const notSendedButton = document.querySelector('.not-sended-button');
+const sendNotSendedButton = document.querySelector('.send-not-sended-button');
+const notSendedContent = document.querySelector('.not-sended-content');
+
+
+const notSendedClicked = {};
+let notSendedPanding = false;
+
+
+const onNotSendedAddPos = () => {
+  if (notSendedClicked[currentIndex]) {
+    return;
+  }
+
+  sendedCount -= 1;
+  sendedElem.textContent = sendedCount;
+  notSendedContent.classList.remove('hidden');
+  const notSendedHtml = `<span class="not-sended-content__button-pos" data-not-sended-button="${currentIndex}">${currentIndex}</span>`;
+  notSendedContent.insertAdjacentHTML('beforeEnd', notSendedHtml);
+  notSendedClicked[currentIndex] = true;
+};
+
+
+const onNotSendedClickButton = (event) => {
+  if (event.target.classList.contains('not-sended-content__button-pos')) {
+    if (notSendedPanding) {
+      return;
+    }
+    notSendedPanding = true;
+    notSendedRemoveButton.classList.add('hidden');
+    notSendedSendButton.classList.add('hidden');
+    const NotSendedPos = event.target.textContent;
+    httpRequest({ pos: NotSendedPos })
+      .then(() => {
+        event.target.classList.add('active');
+        notSendedRemoveButton.classList.remove('hidden');
+        notSendedSendButton.classList.remove('hidden');
+        notSendedPanding = false;
+      });
+
+    return;
+  }
+
+  if (event.target.classList.contains('not-sended-content__remove')) {
+    const onNotSendedButtonPos = document.querySelector(`[data-not-sended-button="${currentIndex}"]`);
+    if (!onNotSendedButtonPos) {
+      return;
+    }
+    notSendedContent.removeChild(onNotSendedButtonPos);
+    event.target.classList.add('hidden');
+    notSendedSendButton.classList.add('hidden');
+    delete notSendedClicked[currentIndex];
+    if (Object.keys(notSendedClicked).length === 0) {
+      notSendedContent.classList.add('hidden');
+    }
+
+    return;
+  }
+
+  if (event.target.classList.contains('not-sended-content__send')) {
+    const onNotSendedButtonPos = document.querySelector(`[data-not-sended-button="${currentIndex}"]`);
+    if (!onNotSendedButtonPos) {
+      return;
+    }
+    if (notSendedPanding) {
+      return;
+    }
+    notSendedPanding = true;
+    let newComment = comment.replace(/\n/g, '<br>');
+    newComment += '<br>НЕ ОТПРАВЛЕНО';
+    sendComment({ comment: newComment })
+      .then(() => {
+        notSendedPanding = false;
+        notSendedContent.removeChild(onNotSendedButtonPos);
+        event.target.classList.add('hidden');
+        notSendedRemoveButton.classList.add('hidden');
+        delete notSendedClicked[currentIndex];
+        if (Object.keys(notSendedClicked).length === 0) {
+          notSendedContent.classList.add('hidden');
+        }
+      })
+      .catch(() => {
+        event.target.classList.add('red');
+        setTimeout(() => {
+          notSendedPanding = false;
+          event.target.classList.remove('red');
+        }, 1000);
+      });
+  }
+};
+
+const onSetNotSended = (event) => {
+  let newComment = comment.replace(/\n/g, '<br>');
+  newComment += '<br>НЕ ОТПРАВЛЕНО';
+  sendComment({ comment: newComment })
+    .then(() => {
+      event.target.classList.add('green');
+      sendedCount -= 1;
+      sendedElem.textContent = sendedCount;
+      setTimeout(() => {
+        event.target.classList.remove('green');
+      }, 1000);
+    })
+    .catch(() => {
+      event.target.classList.add('red');
+      setTimeout(() => {
+        event.target.classList.remove('red');
+      }, 1000);
+    });
+};
+
+
+notSendedButton.addEventListener('click', onNotSendedAddPos);
+sendNotSendedButton.addEventListener('click', onSetNotSended);
+notSendedContent.addEventListener('click', onNotSendedClickButton);
