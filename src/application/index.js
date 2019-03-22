@@ -273,6 +273,7 @@ const copyToBuffer = () => {
       addCommentDescribe.classList.remove('red');
       let newComment = comment.replace(/\n/g, '<br>');
       newComment += `<br>${getDateFormat(date.getDate())}\/${getDateFormat(date.getMonth() + 1)}\/${date.getFullYear()} Юля. Икона Троица.`;
+      comment = newComment;
       sendComment({ comment: newComment })
         .then(() => {
           addCommentDescribe.classList.add('green');
