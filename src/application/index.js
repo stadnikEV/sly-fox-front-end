@@ -18,9 +18,22 @@ const addCommentDescribe = document.querySelector('.add-comment-describe');
 const allEmail = document.querySelector('.all-email');
 const notSendedRemoveButton = document.querySelector('.not-sended-content__remove');
 const notSendedSendButton = document.querySelector('.not-sended-content__send');
-
+const sendNotSendedButton = document.querySelector('.send-not-sended-button');
 
 const date = new Date();
+
+const getDateFormat = (value) => {
+  if (value > 9) {
+    return value;
+  }
+  return `0${value}`;
+};
+
+const templateMain = `${getDateFormat(date.getDate())}\/${getDateFormat(date.getMonth() + 1)}\/${date.getFullYear()} Икона алтарь`;
+const hookMain = 'https://b24-2iruy0.bitrix24.ua/rest/1/nyvcvifbbajtkvh3';
+
+
+
 let id = null;
 let comment = null;
 let sendedCount = 0;
@@ -42,13 +55,6 @@ const backlightPage = (page) => {
   } else {
     containerInputPage.classList.remove('active');
   }
-};
-
-const getDateFormat = (value) => {
-  if (value > 9) {
-    return value;
-  }
-  return `0${value}`;
 };
 
 const sliceEmail = ({ emailString }) => {
@@ -90,7 +96,7 @@ const sendComment = ({ comment }) => {
         COMMENTS: comment,
       },
     };
-    fetch('https://b24-2iruy0.bitrix24.ua/rest/1/nyvcvifbbajtkvh3/crm.company.update', {
+    fetch(`${hookMain}/crm.company.update`, {
       method: 'post',
       headers: {
         'Content-Type': 'application/json',
@@ -157,6 +163,7 @@ const httpRequest = (data) => {
           lastCurrentPage = json.currentPage;
           lastRequesrData = { pos: 1 };
           httpRequest({ pos: 1 });
+          sendNotSendedButton.classList.remove('hidden');
           resolve();
           return;
         }
@@ -192,7 +199,7 @@ const httpRequest = (data) => {
         index += 1;
         text.classList.remove('sended');
         lastCurrentPage = json.currentPage;
-
+        sendNotSendedButton.classList.remove('hidden');
         resolve();
       })
       .catch((e) => {
@@ -272,7 +279,7 @@ const copyToBuffer = () => {
     if (checkboxAddComment.checked) {
       addCommentDescribe.classList.remove('red');
       let newComment = comment.replace(/\n/g, '<br>');
-      newComment += `<br>${getDateFormat(date.getDate())}\/${getDateFormat(date.getMonth() + 1)}\/${date.getFullYear()} Юля. Икона Троица.`;
+      newComment += `<br>${templateMain}`;
       comment = newComment;
       sendComment({ comment: newComment })
         .then(() => {
@@ -574,7 +581,6 @@ commentButtonStop.addEventListener('click', onCommentStop);
 // Приложение НЕ ОТПРАВЛЕНО
 
 const notSendedButton = document.querySelector('.not-sended-button');
-const sendNotSendedButton = document.querySelector('.send-not-sended-button');
 const notSendedContent = document.querySelector('.not-sended-content');
 
 
@@ -607,6 +613,7 @@ const onNotSendedClickButton = (event) => {
     const NotSendedPos = event.target.textContent;
     httpRequest({ pos: NotSendedPos })
       .then(() => {
+        sendNotSendedButton.classList.add('hidden');
         event.target.classList.add('active');
         notSendedRemoveButton.classList.remove('hidden');
         notSendedSendButton.classList.remove('hidden');
@@ -642,6 +649,9 @@ const onNotSendedClickButton = (event) => {
     }
     notSendedPanding = true;
     let newComment = comment.replace(/\n/g, '<br>');
+    if (checkboxAddComment.checked) {
+      newComment += `<br>${templateMain}`;
+    }
     newComment += '<br>НЕ ОТПРАВЛЕНО';
     sendComment({ comment: newComment })
       .then(() => {
