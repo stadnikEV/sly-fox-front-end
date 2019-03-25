@@ -19,6 +19,8 @@ const allEmail = document.querySelector('.all-email');
 const notSendedRemoveButton = document.querySelector('.not-sended-content__remove');
 const notSendedSendButton = document.querySelector('.not-sended-content__send');
 const sendNotSendedButton = document.querySelector('.send-not-sended-button');
+const isConnect = document.querySelector('.is-connect');
+const isChangePos = document.querySelector('.is-change-pos');
 
 const date = new Date();
 
@@ -143,10 +145,10 @@ const httpRequest = (data) => {
         console.log(json);
         id = json.id;
         comment = json.comment;
-        // console.log(lastCurrentPage, json.currentPage);
 
         if (json.isPanding || json.index === undefined) {
           isPanding = true;
+          isConnect.classList.remove('green');
           if (lastRequesrData) {
             setTimeout(() => {
               httpRequest(lastRequesrData)
@@ -157,6 +159,14 @@ const httpRequest = (data) => {
           }
           return;
         }
+
+        if (lastIndex !== json.index + 1 && lastIndex !== null) { // индикация смены позиции
+          isChangePos.classList.add('yellow');
+          setTimeout(() => {
+            isChangePos.classList.remove('yellow');
+          }, 1000);
+        }
+        isConnect.classList.add('green');
         isPanding = false;
 
         if (lastCurrentPage !== null && lastCurrentPage !== json.currentPage && json.currentPage !== undefined) {
@@ -203,6 +213,7 @@ const httpRequest = (data) => {
         resolve();
       })
       .catch((e) => {
+        isConnect.classList.remove('green');
         console.log(e);
       });
   });

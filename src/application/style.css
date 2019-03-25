@@ -250,6 +250,22 @@ font-family: sans-serif;
   visibility: hidden;
 }
 
+
+.is-connect, .is-change-pos {
+  width: 30px;
+  height: 30px;
+  border-radius: 15px;
+  float: left;
+  margin-top: 25px;
+  margin-right: 20px;
+}
+.is-connect.green {
+  background-color: green;
+}
+.is-change-pos.yellow {
+  background-color: yellow;
+}
+
 .not-sended-container {
   /* float: right;
   display: inline-block; */
