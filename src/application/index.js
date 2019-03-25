@@ -273,10 +273,19 @@ inputPage.addEventListener('keyup', refresh);
 
 
 const copyToBuffer = () => {
-  const r = document.createRange();
-  r.selectNode(text);
-  document.getSelection().addRange(r);
+  // const r = document.createRange();
+  // r.selectNode(text);
+  // document.getSelection().addRange(r);
+  // document.execCommand('copy');
+
+  const copy = (e) => {
+    e.preventDefault();
+    e.clipboardData.setData('text/plain', text.textContent);
+  };
+  window.addEventListener('copy', copy);
   document.execCommand('copy');
+  window.removeEventListener('copy', copy);
+
 
   if (index === 2) {
     text.classList.add('sended');
@@ -320,7 +329,7 @@ const copyToBuffer = () => {
   // }
   text.innerHTML = content;
   index += 1;
-  document.getSelection().removeAllRanges();
+  // document.getSelection().removeAllRanges();
 };
 
 text.addEventListener('click', copyToBuffer);
