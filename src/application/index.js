@@ -47,7 +47,7 @@ let jsonText = null;
 let index = null;
 let jsonLength = null;
 let lastIndex = null;
-const arr = ['theme', 'email', 'body'];
+const arr = ['email', 'theme', 'body'];
 const text = document.querySelector('[data-component="text"]');
 
 let currentIndex = null;
@@ -205,7 +205,7 @@ const httpRequest = (data) => {
         // const content = sliceEmail({ emailString: jsonText[arr[index]] });
 
         text.innerHTML = content;
-        allEmail.innerHTML = jsonText[arr[1]];
+        allEmail.innerHTML = jsonText[arr[0]];
         index += 1;
         text.classList.remove('sended');
         lastCurrentPage = json.currentPage;
