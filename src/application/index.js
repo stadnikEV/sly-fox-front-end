@@ -191,6 +191,10 @@ const httpRequest = (data) => {
 
         if (lastIndex === jsonLength && currentIndex !== jsonLength - 1 && jsonLength !== null && data.move === 'next') {
           topContainer.classList.add('green');
+          isChangePos.classList.add('yellow');
+          setTimeout(() => {
+            isChangePos.classList.remove('yellow');
+          }, 1000);
         }
 
         jsonLength = json.length;
@@ -201,8 +205,8 @@ const httpRequest = (data) => {
 
         jsonText = json.text;
         index = 0;
-        const content = jsonText[arr[index]];
-        // const content = sliceEmail({ emailString: jsonText[arr[index]] });
+        // const content = jsonText[arr[index]];
+        const content = sliceEmail({ emailString: jsonText[arr[index]] });
 
         text.innerHTML = content;
         allEmail.innerHTML = jsonText[arr[0]];
@@ -317,7 +321,7 @@ const copyToBuffer = () => {
   }
   let contentText = jsonText[arr[index]];
 
-  if (index === 1) {
+  if (index === 0) {
     contentText = sliceEmail({ emailString: contentText });
   }
   const content = contentText;
