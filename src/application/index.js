@@ -32,6 +32,7 @@ const getDateFormat = (value) => {
 };
 
 const templateMain = `${getDateFormat(date.getDate())}\/${getDateFormat(date.getMonth() + 1)}\/${date.getFullYear()} Икона алтарь`;
+const commentByEmail = 'НЕ ДОШЛО';
 const hookMain = 'https://b24-2iruy0.bitrix24.ua/rest/1/nyvcvifbbajtkvh3';
 
 
@@ -407,7 +408,7 @@ const autoIdElem = document.querySelector('.auto-comment__id');
 
 const getListId = () => {
   const promise = new Promise((resolve, reject) => {
-    statusElem.innerHTML = 'получения листа';
+    statusElem.innerHTML = 'получение листа';
     let start = currentId - 1;
     const result = [];
 
@@ -451,10 +452,12 @@ const getListId = () => {
             return;
           }
           statusElem.innerHTML = '';
+          statusElem.classList.remove('red');
           resolve(result);
         })
         .catch((e) => {
           statusElem.innerHTML = 'ошбка получения листа';
+          statusElem.classList.add('red');
           reject(e);
         });
     };
@@ -471,6 +474,7 @@ const onCommentStop = () => {
   template = null;
   hook = null;
   statusElem.innerHTML = '';
+  statusElem.classList.remove('red');
   commentStartActive = false;
 };
 
@@ -490,6 +494,7 @@ const autoSendComment = (data) => {
       })
       .catch((e) => {
         statusElem.innerHTML = 'Ошибка при добавлении в битрикс';
+        statusElem.classList.add('red');
         reject(e);
       });
   });
@@ -570,6 +575,7 @@ autoCommentCheckBoxElem.addEventListener('click', () => {
 
 commentButtonStart.addEventListener('click', () => {
   statusElem.innerHTML = '';
+  statusElem.classList.remove('red');
   if (commentStartActive) {
     return;
   }
@@ -582,12 +588,14 @@ commentButtonStart.addEventListener('click', () => {
   if (endId % 2 !== 0 || startId % 2 !== 0) {
     onCommentStop();
     statusElem.innerHTML = 'id должны быть четные числа';
+    statusElem.classList.add('red');
     return;
   }
 
   if (!startId || !endId || !hook || !template) {
     onCommentStop();
     statusElem.innerHTML = 'заполните все поля';
+    statusElem.classList.add('red');
     return;
   }
 
@@ -600,6 +608,83 @@ commentButtonStart.addEventListener('click', () => {
 
 
 commentButtonStop.addEventListener('click', onCommentStop);
+
+
+// Добавить комментарий по email
+
+const buttonAddByEmail = document.querySelector('.auto-comment-by-email__add-button');
+const inputAddByEmail = document.querySelector('.auto-comment-by-email__email-input');
+let lastIdByEmail = null;
+let currentIdByEmai = null;
+
+inputAddByEmail.addEventListener('focus', () => {
+  inputAddByEmail.value = '';
+});
+
+buttonAddByEmail.addEventListener('click', () => {
+  if (inputAddByEmail.value === '') {
+    statusElem.innerHTML = 'Заполните поле Email';
+    statusElem.classList.add('red');
+    return;
+  }
+  statusElem.classList.remove('red');
+  statusElem.innerHTML = '';
+  if (commentStartActive) {
+    return;
+  }
+  commentStartActive = true;
+
+  const data = {
+    order: { DATE_CREATE: 'ASC' },
+    filter: { EMAIL: inputAddByEmail.value },
+    select: ['id', 'COMMENTS'],
+  };
+
+  fetch(`${hookMain}/crm.company.list`, {
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
+    .then(response => response.json())
+    .then((dataResult) => {
+      if (dataResult.result.length > 1) {
+        return Promise.reject(new Error('Найдено больше одного совпадения'));
+      }
+      if (dataResult.result.length === 0) {
+        return Promise.reject(new Error('Email не найден'));
+      }
+
+      currentIdByEmai = dataResult.result[0].ID;
+
+      if (currentIdByEmai === lastIdByEmail) {
+        return Promise.reject(new Error('Комментарий уже был добавлен'));
+      }
+
+      const COMMENTS = dataResult.result[0].COMMENTS += `<br>${commentByEmail}`;
+      const dataNew = { id: dataResult.result[0].ID, fields: { COMMENTS } };
+
+      return fetch(`${hookMain}/crm.company.update`, {
+        method: 'post',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dataNew),
+      });
+    })
+    .then(() => {
+      statusElem.innerHTML = 'Комментарий успешно добывлен';
+      lastIdByEmail = currentIdByEmai;
+      commentStartActive = false;
+    })
+    .catch((err) => {
+      statusElem.classList.add('red');
+      statusElem.innerHTML = err.message;
+      commentStartActive = false;
+      console.log(err);
+    });
+});
 
 
 // Приложение НЕ ОТПРАВЛЕНО
