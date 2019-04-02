@@ -478,15 +478,32 @@ const onCommentStop = () => {
   commentStartActive = false;
 };
 
-const autoSendComment = (data) => {
+const serialize = (obj, prefix) => {
+  var str = [],
+    p;
+  for (p in obj) {
+    if (obj.hasOwnProperty(p)) {
+      var k = prefix ? prefix + "[" + p + "]" : p,
+        v = obj[p];
+      str.push((v !== null && typeof v === "object") ?
+        serialize(v, k) :
+        encodeURIComponent(k) + "=" + encodeURIComponent(v));
+    }
+  }
+  return str.join("&");
+}
+
+const autoSendComment = (batchData) => {
   const promise = new Promise((resolve, reject) => {
-    autoIdElem.innerHTML = data.id;
-    fetch(`${hook}/crm.company.update`, {
+    // autoIdElem.innerHTML = `${batchData[0].id} - ${batchData[batchData.length - 1].id}`;
+    fetch(`${hook}/batch`, {
       method: 'post',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        cmd: batchData,
+      }),
     })
       .then(response => response.json())
       .then(() => {
@@ -513,12 +530,12 @@ const autoCommentAdd = (list) => {
       return;
     }
     const add = () => {
-      const item = list.shift();
-      const COMMENTS = item.COMMENTS += `<br>${template}`;
-      const data = { id: item.ID, fields: { COMMENTS } };
-      autoSendComment(data)
+      const batchData = list.shift();
+      autoSendComment(batchData)
         .then(() => {
-          added += 1;
+          added += batchData.length;
+          autoIdElem.innerHTML = added;
+          // added += 1;
           if (list.length === 0) {
             resolve(added);
             return;
@@ -538,6 +555,22 @@ const autoCommentAdd = (list) => {
   return promise;
 }
 
+const prepareBatch = (list) => {
+  list.forEach((item, i) => {
+    const COMMENTS = item.COMMENTS += `<br>${template}`;
+    const data = { id: item.ID, fields: { COMMENTS } };
+    const request = `crm.company.update?${serialize(data)}`;
+    list[i] = request;
+  });
+  const cmdList = [];
+
+  while (list.length !== 0) {
+    cmdList.push(list.splice(0, 50));
+  }
+
+  return cmdList;
+};
+
 
 const autoAddComment = () => {
   if (!autoCommentActive || !commentStartActive) {
@@ -547,7 +580,8 @@ const autoAddComment = () => {
 
   getListId()
     .then((list) => {
-      return autoCommentAdd(list);
+      const cmdList = prepareBatch(list);
+      return autoCommentAdd(cmdList);
     })
     .then((added) => {
       statusElem.innerHTML = `Успешно добавленно ${added}`;
