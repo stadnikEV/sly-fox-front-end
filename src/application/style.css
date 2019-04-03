@@ -6,6 +6,7 @@ font-family: sans-serif;
 
 .top-container {
   padding: 15px 0;
+  position: relative;
 }
 .top-container.red {
   background-color: red;
@@ -26,7 +27,9 @@ font-family: sans-serif;
 
 
 .position {
-  float: right;
+  position: absolute;
+  right: 0;
+  /* float: right; */
   font-size: 40px;
   color: blue;
   margin-right: 25px;
@@ -48,15 +51,24 @@ font-family: sans-serif;
   margin-top: 15px;
 }
 
+.name-container {
+  height: 46px;
+  white-space: nowrap;
+}
+
 .first-name {
-  font-size: 40px;
+  vertical-align: bottom;
+  line-height: 46px;
+  font-size: 30px;
   margin-left: 10px;
   margin-top: 15px;
   font-weight: bold;
 }
 .middle-name {
+  vertical-align: bottom;
+  line-height: 46px;
   font-weight: bold;
-  font-size: 40px;
+  font-size: 30px;
   margin-left: 10px;
   margin-top: 15px;
 }
