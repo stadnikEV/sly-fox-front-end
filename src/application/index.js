@@ -51,6 +51,8 @@ let lastIndex = null;
 const arr = ['email', 'theme', 'body'];
 const text = document.querySelector('[data-component="text"]');
 
+
+
 let currentIndex = null;
 const backlightPage = (page) => {
   if (inputPage.value !== page) {
@@ -66,6 +68,30 @@ const sliceEmail = ({ emailString }) => {
     .splice(0, 3);
 
   return email.join(',');
+};
+
+const getLocalStorage = () => {
+  const storage = localStorage.getItem('Статистика');
+
+  if (!storage) {
+    const statistic = {
+      'Последняя отправка': {},
+      'Всего отправлено': 0,
+      'Всего не отправлено': 0,
+      'Всего не дошло': 0,
+      'Не отправленные': [],
+      'Подтверждение не отправлено': [],
+    };
+
+    localStorage.setItem('Статистика', JSON.stringify(statistic));
+    return JSON.parse(localStorage.getItem('Статистика'));
+  }
+
+  return JSON.parse(storage);
+};
+
+const setLocalStorage = (statistics) => {
+  localStorage.setItem('Статистика', JSON.stringify(statistics));
 };
 
 
@@ -300,6 +326,17 @@ const copyToBuffer = () => {
     }
     sendedCount += 1;
     sendedElem.textContent = sendedCount;
+
+
+    const statistics = getLocalStorage();
+
+    statistics['Последняя отправка'] = {
+      pos: currentIndex,
+      id,
+      page: lastCurrentPage,
+    };
+    statistics['Всего отправлено'] += 1;
+    setLocalStorage(statistics);
 
     if (checkboxAddComment.checked) {
       addCommentDescribe.classList.remove('red');
@@ -711,6 +748,10 @@ buttonAddByEmail.addEventListener('click', () => {
       statusElem.innerHTML = 'Комментарий успешно добывлен';
       lastIdByEmail = currentIdByEmai;
       commentStartActive = false;
+
+      const statistics = getLocalStorage();
+      statistics['Всего не дошло'] += 1;
+      setLocalStorage(statistics);
     })
     .catch((err) => {
       statusElem.classList.add('red');
@@ -742,6 +783,14 @@ const onNotSendedAddPos = () => {
   const notSendedHtml = `<span class="not-sended-content__button-pos" data-not-sended-button="${currentIndex}">${currentIndex}</span>`;
   notSendedContent.insertAdjacentHTML('beforeEnd', notSendedHtml);
   notSendedClicked[currentIndex] = true;
+
+  const statistics = getLocalStorage();
+  statistics['Подтверждение не отправлено'].push({
+    pos: currentIndex,
+    id,
+    page: lastCurrentPage,
+  });
+  setLocalStorage(statistics);
 };
 
 
@@ -777,6 +826,10 @@ const onNotSendedClickButton = (event) => {
     delete notSendedClicked[currentIndex];
     if (Object.keys(notSendedClicked).length === 0) {
       notSendedContent.classList.add('hidden');
+
+      const statistics = getLocalStorage();
+      statistics['Подтверждение не отправлено'] = [];
+      setLocalStorage(statistics);
     }
 
     return;
@@ -805,7 +858,21 @@ const onNotSendedClickButton = (event) => {
         delete notSendedClicked[currentIndex];
         if (Object.keys(notSendedClicked).length === 0) {
           notSendedContent.classList.add('hidden');
+
+          const statistics = getLocalStorage();
+          statistics['Подтверждение не отправлено'] = [];
+          setLocalStorage(statistics);
         }
+
+        const statistics = getLocalStorage();
+        statistics['Всего не отправлено'] += 1;
+        statistics['Всего отправлено'] -= 1;
+        statistics['Не отправленные'].push({
+          pos: currentIndex,
+          id,
+          page: lastCurrentPage,
+        });
+        setLocalStorage(statistics);
       })
       .catch(() => {
         event.target.classList.add('red');
@@ -825,6 +892,18 @@ const onSetNotSended = (event) => {
       event.target.classList.add('green');
       sendedCount -= 1;
       sendedElem.textContent = sendedCount;
+
+      const statistics = getLocalStorage();
+      statistics['Всего не отправлено'] += 1;
+      statistics['Всего отправлено'] -= 1;
+      statistics['Не отправленные'].push({
+        pos: currentIndex,
+        id,
+        page: lastCurrentPage,
+      });
+      setLocalStorage(statistics);
+
+
       setTimeout(() => {
         event.target.classList.remove('green');
       }, 1000);
@@ -841,3 +920,21 @@ const onSetNotSended = (event) => {
 notSendedButton.addEventListener('click', onNotSendedAddPos);
 sendNotSendedButton.addEventListener('click', onSetNotSended);
 notSendedContent.addEventListener('click', onNotSendedClickButton);
+
+
+//  данные из getLocalStorage
+
+const getLastData = () => {
+  const statistics = getLocalStorage();
+  if (statistics['Последняя отправка'].pos) {
+    httpRequest({ pos: statistics['Последняя отправка'].pos });
+  }
+  if (statistics['Последняя отправка'].page) {
+    inputPage.value = statistics['Последняя отправка'].page;
+  }
+  if (statistics['Всего отправлено']) {
+    sendedElem.textContent = statistics['Всего отправлено'];
+  }
+};
+
+getLastData();
