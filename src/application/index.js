@@ -21,6 +21,11 @@ const notSendedSendButton = document.querySelector('.not-sended-content__send');
 const sendNotSendedButton = document.querySelector('.send-not-sended-button');
 const isConnect = document.querySelector('.is-connect');
 const isChangePos = document.querySelector('.is-change-pos');
+const isEndMailing = document.querySelector('.is-end-mailing');
+const sendedCountEmailInput = document.querySelector('.sended-count-email-input');
+const sendedCountEmail = document.querySelector('.sended-count-email');
+const sendedCountEmailButton = document.querySelector('.sended-count-email-button');
+
 
 const date = new Date();
 
@@ -40,6 +45,7 @@ const hookMain = 'https://b24-2iruy0.bitrix24.ua/rest/1/nyvcvifbbajtkvh3';
 let id = null;
 let comment = null;
 let sendedCount = 0;
+let emailSendedCount = parseInt(sendedCountEmail.textContent, 10);
 let isSended = false;
 let lastCurrentPage = null;
 let lastRequesrData = null;
@@ -50,7 +56,6 @@ let jsonLength = null;
 let lastIndex = null;
 const arr = ['email', 'theme', 'body'];
 const text = document.querySelector('[data-component="text"]');
-
 
 
 let currentIndex = null;
@@ -81,6 +86,7 @@ const getLocalStorage = () => {
       'Всего не дошло': 0,
       'Не отправленные': [],
       'Подтверждение не отправлено': [],
+      'Осталось отправить': parseInt(sendedCountEmail.textContent, 10),
     };
 
     localStorage.setItem('Статистика', JSON.stringify(statistic));
@@ -92,6 +98,40 @@ const getLocalStorage = () => {
 
 const setLocalStorage = (statistics) => {
   localStorage.setItem('Статистика', JSON.stringify(statistics));
+};
+
+const removeNotConfirm = ({ id }) => {
+  const statistics = getLocalStorage();
+  const confirm = statistics['Подтверждение не отправлено'];
+  let removeIndex = null;
+
+  confirm.forEach((item, i) => {
+    if (item.id === id) {
+      removeIndex = i;
+    }
+  });
+  confirm.splice(removeIndex, 1);
+  statistics['Подтверждение не отправлено'] = confirm;
+  setLocalStorage(statistics);
+};
+
+const changeEmailCount = ({ inc }) => {
+  emailSendedCount += inc;
+  sendedCountEmail.textContent = emailSendedCount;
+
+  if (emailSendedCount <= 0) {
+    isEndMailing.classList.add('blue');
+  }
+
+  const statistics = getLocalStorage();
+  statistics['Осталось отправить'] = parseInt(sendedCountEmail.textContent, 10);
+  setLocalStorage(statistics);
+
+  if (emailSendedCount <= 0) {
+    isEndMailing.classList.add('blue');
+  } else {
+    isEndMailing.classList.remove('blue');
+  }
 };
 
 
@@ -326,6 +366,7 @@ const copyToBuffer = () => {
     }
     sendedCount += 1;
     sendedElem.textContent = sendedCount;
+    changeEmailCount({ inc: -1 });
 
 
     const statistics = getLocalStorage();
@@ -778,6 +819,7 @@ const onNotSendedAddPos = () => {
   }
 
   sendedCount -= 1;
+  changeEmailCount({ inc: 1 });
   sendedElem.textContent = sendedCount;
   notSendedContent.classList.remove('hidden');
   const notSendedHtml = `<span class="not-sended-content__button-pos" data-not-sended-button="${currentIndex}">${currentIndex}</span>`;
@@ -824,12 +866,14 @@ const onNotSendedClickButton = (event) => {
     event.target.classList.add('hidden');
     notSendedSendButton.classList.add('hidden');
     delete notSendedClicked[currentIndex];
+
+    const statistics = getLocalStorage();
+    statistics['Всего отправлено'] -= 1;
+    setLocalStorage(statistics);
+    removeNotConfirm({ id });
+
     if (Object.keys(notSendedClicked).length === 0) {
       notSendedContent.classList.add('hidden');
-
-      const statistics = getLocalStorage();
-      statistics['Подтверждение не отправлено'] = [];
-      setLocalStorage(statistics);
     }
 
     return;
@@ -858,10 +902,6 @@ const onNotSendedClickButton = (event) => {
         delete notSendedClicked[currentIndex];
         if (Object.keys(notSendedClicked).length === 0) {
           notSendedContent.classList.add('hidden');
-
-          const statistics = getLocalStorage();
-          statistics['Подтверждение не отправлено'] = [];
-          setLocalStorage(statistics);
         }
 
         const statistics = getLocalStorage();
@@ -873,6 +913,7 @@ const onNotSendedClickButton = (event) => {
           page: lastCurrentPage,
         });
         setLocalStorage(statistics);
+        removeNotConfirm({ id });
       })
       .catch(() => {
         event.target.classList.add('red');
@@ -891,6 +932,7 @@ const onSetNotSended = (event) => {
     .then(() => {
       event.target.classList.add('green');
       sendedCount -= 1;
+      changeEmailCount({ inc: 1 });
       sendedElem.textContent = sendedCount;
 
       const statistics = getLocalStorage();
@@ -933,8 +975,44 @@ const getLastData = () => {
     inputPage.value = statistics['Последняя отправка'].page;
   }
   if (statistics['Всего отправлено']) {
+    sendedCount = statistics['Всего отправлено'];
     sendedElem.textContent = statistics['Всего отправлено'];
   }
+  if (typeof statistics['Осталось отправить'] === 'number') {
+    sendedCountEmail.textContent = statistics['Осталось отправить'];
+    emailSendedCount = statistics['Осталось отправить'];
+    changeEmailCount({ inc: 0 });
+  }
+  if (statistics['Подтверждение не отправлено'].length === 0) {
+    return;
+  }
+
+  statistics['Подтверждение не отправлено'].forEach((item) => {
+    notSendedContent.classList.remove('hidden');
+    const notSendedHtml = `<span class="not-sended-content__button-pos" data-not-sended-button="${item.pos}">${item.pos}</span>`;
+    notSendedContent.insertAdjacentHTML('beforeEnd', notSendedHtml);
+    notSendedClicked[item.pos] = true;
+  });
 };
 
 getLastData();
+
+
+
+// счетчи писем с одного email
+
+sendedCountEmail.addEventListener('click', () => {
+  sendedCountEmailInput.classList.remove('hidden');
+  sendedCountEmail.classList.add('hidden');
+  sendedCountEmailInput.value = sendedCountEmail.textContent;
+  sendedCountEmailInput.focus();
+});
+
+sendedCountEmailButton.addEventListener('click', () => {
+  sendedCountEmail.textContent = sendedCountEmailInput.value;
+  sendedCountEmailInput.classList.add('hidden');
+  sendedCountEmail.classList.remove('hidden');
+  emailSendedCount = parseInt(sendedCountEmail.textContent, 10);
+
+  changeEmailCount({ inc: 0 });
+});

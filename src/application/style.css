@@ -244,6 +244,42 @@ font-family: sans-serif;
   margin-left: 20px;
 }
 
+.sended-count-email-container {
+  display: inline-block;
+  float: left;
+  margin-left: 70px;
+}
+
+.sended-count-email {
+  color: blue;
+  background-color: rgb(234, 234, 234);
+  line-height: 50px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 40px;
+}
+
+.sended-count-email.hidden {
+  display: none;
+}
+
+.sended-count-email-input {
+  height: 45px;
+  width: 100px;
+  box-sizing: border-box;
+  font-size: 30px;
+  letter-spacing: 6px;
+  color: blue;
+}
+
+.sended-count-email-input.hidden {
+  display: none;
+}
+
+.sended-count-email-button {
+  display: none;
+}
+
 .arrow-count-left, .arrow-count-right {
   float: left;
   line-height: 50px;
@@ -263,7 +299,7 @@ font-family: sans-serif;
 }
 
 
-.is-connect, .is-change-pos {
+.is-connect, .is-change-pos, .is-end-mailing {
   width: 30px;
   height: 30px;
   border-radius: 15px;
@@ -276,6 +312,9 @@ font-family: sans-serif;
 }
 .is-change-pos.yellow {
   background-color: yellow;
+}
+.is-end-mailing.blue {
+  background-color: blue;
 }
 
 .not-sended-container {
