@@ -132,12 +132,15 @@ const moveSendedPos = ({ id, to }) => {
   let pos = null;
   statistics['Отправленные'].forEach((item, i) => {
     if (item.id === id) {
-      pos = statistics['Отправленные'].splice(i, 1);
+      if (to === 'Не дошедшие') {
+        pos = item;
+      } else {
+        pos = statistics['Отправленные'].splice(i, 1)[0];
+      }
     }
   });
-
   if (pos) {
-    statistics[to].push(pos[0]);
+    statistics[to].push(pos);
   }
 
   setLocalStorage(statistics);
