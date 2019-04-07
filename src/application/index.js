@@ -77,11 +77,18 @@ const sliceEmail = ({ emailString }) => {
   return email.join(',');
 };
 
+const getTime = () => {
+  const date = new Date();
+  const time = `${getDateFormat(date.getHours())}:${getDateFormat(date.getMinutes())}`;
+  return time;
+};
+
 const getLocalStorage = () => {
   const storage = localStorage.getItem('Статистика');
 
   if (!storage) {
     const statistic = {
+      'Начало отправки': null,
       'Последняя отправка': {},
       'Всего отправлено': 0,
       'Всего не отправлено': 0,
@@ -128,7 +135,11 @@ const moveSendedPos = ({ id, to }) => {
       pos = statistics['Отправленные'].splice(i, 1);
     }
   });
-  statistics[to].push(pos);
+
+  if (pos) {
+    statistics[to].push(pos[0]);
+  }
+
   setLocalStorage(statistics);
 };
 
@@ -149,6 +160,24 @@ const changeEmailCount = ({ inc }) => {
   } else {
     isEndMailing.classList.remove('blue');
   }
+};
+
+const sendStatistics = () => {
+  console.log('sent');
+  fetch('http://localhost:3000/statistics', {
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(getLocalStorage()),
+  })
+    .then((response) => {
+      const json = response.json();
+      return json;
+    })
+    .catch((e) => {
+      console.log(e);
+    });
 };
 
 
@@ -395,12 +424,17 @@ const copyToBuffer = () => {
         id,
         page: lastCurrentPage,
         email: currentEmailInput.value,
+        time: getTime(),
       };
+      if (!statistics['Начало отправки']) {
+        statistics['Начало отправки'] = getTime();
+      }
       statistics['Последняя отправка'] = sendedEmail;
       statistics['Последний email'] = currentEmailInput.value;
       statistics['Отправленные'].push(sendedEmail);
       statistics['Всего отправлено'] += 1;
       setLocalStorage(statistics);
+      sendStatistics();
     }
 
 
@@ -819,6 +853,7 @@ buttonAddByEmail.addEventListener('click', () => {
       statistics['Всего не дошло'] += 1;
       setLocalStorage(statistics);
       moveSendedPos({ id: currentIdByEmai, to: 'Не дошедшие' });
+      sendStatistics();
     })
     .catch((err) => {
       statusElem.classList.add('red');
@@ -897,9 +932,10 @@ const onNotSendedClickButton = (event) => {
     sendedCount += 1;
     sendedElem.textContent = sendedCount;
     changeEmailCount({ inc: -1 });
-    const statistics = getLocalStorage();
-    setLocalStorage(statistics);
+    // const statistics = getLocalStorage();
+    // setLocalStorage(statistics);
     removeNotConfirm({ id });
+    sendStatistics();
 
     if (Object.keys(notSendedClicked).length === 0) {
       notSendedContent.classList.add('hidden');
@@ -939,6 +975,7 @@ const onNotSendedClickButton = (event) => {
         setLocalStorage(statistics);
         removeNotConfirm({ id });
         moveSendedPos({ id, to: 'Не отправленные' });
+        sendStatistics();
       })
       .catch(() => {
         event.target.classList.add('red');
@@ -975,6 +1012,7 @@ const onSetNotSended = (event) => {
       statistics['Всего отправлено'] -= 1;
       setLocalStorage(statistics);
       moveSendedPos({ id, to: 'Не отправленные' });
+      sendStatistics();
 
 
       setTimeout(() => {
