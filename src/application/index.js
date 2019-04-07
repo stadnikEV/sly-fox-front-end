@@ -54,6 +54,7 @@ let jsonText = null;
 let index = null;
 let jsonLength = null;
 let lastIndex = null;
+let saveLastPos = false;
 const arr = ['email', 'theme', 'body'];
 const text = document.querySelector('[data-component="text"]');
 
@@ -298,7 +299,7 @@ const onNext = () => {
   if (isPanding) {
     return;
   }
-
+  saveLastPos = true;
   httpRequest({ move: 'next' });
 };
 const next = document.querySelector('[data-component="next"]');
@@ -308,6 +309,7 @@ const onPrev = () => {
   if (isPanding) {
     return;
   }
+  saveLastPos = true;
   httpRequest({ move: 'prev' });
 };
 const prev = document.querySelector('[data-component="prev"]');
@@ -327,6 +329,7 @@ checkbox.addEventListener('click', () => {
 
 
 const sendPos = () => {
+  saveLastPos = true;
   const val = input.value;
   httpRequest({ pos: val });
   input.value = '';
@@ -370,12 +373,13 @@ const copyToBuffer = () => {
 
 
     const statistics = getLocalStorage();
-
-    statistics['Последняя отправка'] = {
-      pos: currentIndex,
-      id,
-      page: lastCurrentPage,
-    };
+    if (saveLastPos) {
+      statistics['Последняя отправка'] = {
+        pos: currentIndex,
+        id,
+        page: lastCurrentPage,
+      };
+    }
     statistics['Всего отправлено'] += 1;
     setLocalStorage(statistics);
 
@@ -841,6 +845,7 @@ const onNotSendedClickButton = (event) => {
     if (notSendedPanding) {
       return;
     }
+    saveLastPos = false;
     notSendedPanding = true;
     notSendedRemoveButton.classList.add('hidden');
     notSendedSendButton.classList.add('hidden');
