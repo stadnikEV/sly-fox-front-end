@@ -25,6 +25,7 @@ const isEndMailing = document.querySelector('.is-end-mailing');
 const sendedCountEmailInput = document.querySelector('.sended-count-email-input');
 const sendedCountEmail = document.querySelector('.sended-count-email');
 const sendedCountEmailButton = document.querySelector('.sended-count-email-button');
+const currentEmailInput = document.querySelector('.current-email');
 
 
 const date = new Date();
@@ -54,7 +55,7 @@ let jsonText = null;
 let index = null;
 let jsonLength = null;
 let lastIndex = null;
-let saveLastPos = false;
+let saveLastPos = true;
 const arr = ['email', 'theme', 'body'];
 const text = document.querySelector('[data-component="text"]');
 
@@ -86,8 +87,11 @@ const getLocalStorage = () => {
       'Всего не отправлено': 0,
       'Всего не дошло': 0,
       'Не отправленные': [],
+      'Отправленные': [],
+      'Не дошедшие': [],
       'Подтверждение не отправлено': [],
       'Осталось отправить': parseInt(sendedCountEmail.textContent, 10),
+      'Последний email': '',
     };
 
     localStorage.setItem('Статистика', JSON.stringify(statistic));
@@ -113,6 +117,18 @@ const removeNotConfirm = ({ id }) => {
   });
   confirm.splice(removeIndex, 1);
   statistics['Подтверждение не отправлено'] = confirm;
+  setLocalStorage(statistics);
+};
+
+const moveSendedPos = ({ id, to }) => {
+  const statistics = getLocalStorage();
+  let pos = null;
+  statistics['Отправленные'].forEach((item, i) => {
+    if (item.id === id) {
+      pos = statistics['Отправленные'].splice(i, 1);
+    }
+  });
+  statistics[to].push(pos);
   setLocalStorage(statistics);
 };
 
@@ -367,21 +383,26 @@ const copyToBuffer = () => {
     if (isSended) {
       return;
     }
-    sendedCount += 1;
-    sendedElem.textContent = sendedCount;
-    changeEmailCount({ inc: -1 });
 
 
-    const statistics = getLocalStorage();
     if (saveLastPos) {
-      statistics['Последняя отправка'] = {
+      sendedCount += 1;
+      sendedElem.textContent = sendedCount;
+      changeEmailCount({ inc: -1 });
+      const statistics = getLocalStorage();
+      const sendedEmail = {
         pos: currentIndex,
         id,
         page: lastCurrentPage,
+        email: currentEmailInput.value,
       };
+      statistics['Последняя отправка'] = sendedEmail;
+      statistics['Последний email'] = currentEmailInput.value;
+      statistics['Отправленные'].push(sendedEmail);
+      statistics['Всего отправлено'] += 1;
+      setLocalStorage(statistics);
     }
-    statistics['Всего отправлено'] += 1;
-    setLocalStorage(statistics);
+
 
     if (checkboxAddComment.checked) {
       addCommentDescribe.classList.remove('red');
@@ -797,6 +818,7 @@ buttonAddByEmail.addEventListener('click', () => {
       const statistics = getLocalStorage();
       statistics['Всего не дошло'] += 1;
       setLocalStorage(statistics);
+      moveSendedPos({ id: currentIdByEmai, to: 'Не дошедшие' });
     })
     .catch((err) => {
       statusElem.classList.add('red');
@@ -872,8 +894,10 @@ const onNotSendedClickButton = (event) => {
     notSendedSendButton.classList.add('hidden');
     delete notSendedClicked[currentIndex];
 
+    sendedCount += 1;
+    sendedElem.textContent = sendedCount;
+    changeEmailCount({ inc: -1 });
     const statistics = getLocalStorage();
-    statistics['Всего отправлено'] -= 1;
     setLocalStorage(statistics);
     removeNotConfirm({ id });
 
@@ -912,13 +936,9 @@ const onNotSendedClickButton = (event) => {
         const statistics = getLocalStorage();
         statistics['Всего не отправлено'] += 1;
         statistics['Всего отправлено'] -= 1;
-        statistics['Не отправленные'].push({
-          pos: currentIndex,
-          id,
-          page: lastCurrentPage,
-        });
         setLocalStorage(statistics);
         removeNotConfirm({ id });
+        moveSendedPos({ id, to: 'Не отправленные' });
       })
       .catch(() => {
         event.target.classList.add('red');
@@ -940,15 +960,21 @@ const onSetNotSended = (event) => {
       changeEmailCount({ inc: 1 });
       sendedElem.textContent = sendedCount;
 
+      // const statistics = getLocalStorage();
+      // statistics['Всего не отправлено'] += 1;
+      // statistics['Всего отправлено'] -= 1;
+      // statistics['Не отправленные'].push({
+      //   pos: currentIndex,
+      //   id,
+      //   page: lastCurrentPage,
+      // });
+      // setLocalStorage(statistics);
+
       const statistics = getLocalStorage();
       statistics['Всего не отправлено'] += 1;
       statistics['Всего отправлено'] -= 1;
-      statistics['Не отправленные'].push({
-        pos: currentIndex,
-        id,
-        page: lastCurrentPage,
-      });
       setLocalStorage(statistics);
+      moveSendedPos({ id, to: 'Не отправленные' });
 
 
       setTimeout(() => {
@@ -987,6 +1013,9 @@ const getLastData = () => {
     sendedCountEmail.textContent = statistics['Осталось отправить'];
     emailSendedCount = statistics['Осталось отправить'];
     changeEmailCount({ inc: 0 });
+  }
+  if (statistics['Последний email']) {
+    currentEmailInput.value = statistics['Последний email'];
   }
   if (statistics['Подтверждение не отправлено'].length === 0) {
     return;
