@@ -235,6 +235,7 @@ const sendComment = ({ comment }) => {
 
 const httpRequest = (data) => {
   const promise = new Promise((resolve) => {
+    addCommentDescribe.classList.remove('green');
     data.notCreatePDF = checkbox.checked;
     lastRequesrData = data;
     console.log(data);
@@ -449,9 +450,6 @@ const copyToBuffer = () => {
       sendComment({ comment: newComment })
         .then(() => {
           addCommentDescribe.classList.add('green');
-          setTimeout(() => {
-            addCommentDescribe.classList.remove('green');
-          }, 1000);
         })
         .catch(() => {
           addCommentDescribe.classList.add('red');
