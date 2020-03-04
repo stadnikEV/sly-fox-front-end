@@ -693,8 +693,18 @@ const autoCommentAdd = (list) => {
   return promise;
 }
 
+const filterNotSended = list => {
+  return list.filter((item) => {
+    const match = item.COMMENTS.toLowerCase().match(/(color|не дошло|не доставлено|не отправлено|нет таких)/, 'g')
+    if (match) {
+      return false
+    }
+    return true
+  })
+}
+
 const prepareBatch = (list) => {
-  list.forEach((item, i) => {
+  filterNotSended(list).forEach((item, i) => {
     const COMMENTS = item.COMMENTS += `<br>${template}`;
     const data = { id: item.ID, fields: { COMMENTS } };
     const request = `crm.company.update?${serialize(data)}`;
